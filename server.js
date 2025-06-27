@@ -1,8 +1,14 @@
+const express = require('express');
+const http = require('http');
 const WebSocket = require('ws');
 const { v4: uuidv4 } = require('uuid');
+const path = require('path');
 
-const wss = new WebSocket.Server({ port: 8080 });
-console.log('Servidor WebSocket rodando na porta 8080');
+const app = express();
+const server = http.createServer(app);
+const wss = new WebSocket.Server({ server });
+
+app.use(express.static(path.join(__dirname)));
 
 const players = {};
 const orbs = [];
@@ -78,4 +84,9 @@ wss.on('connection', ws => {
   });
 
   setInterval(broadcastPlayers, 100);
+});
+
+const PORT = process.env.PORT || 8080;
+server.listen(PORT, () => {
+  console.log(`Servidor rodando em porta ${PORT}`);
 });
