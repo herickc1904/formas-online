@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Formas Online</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #111; overflow: hidden; color: white; font-family: sans-serif; }
+    canvas { display: block; background: #111; }
+    #controls {
+      position: fixed;
+      bottom: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 10px;
+    }
+    .btn {
+      width: 60px;
+      height: 60px;
+      background: #333;
+      border: 2px solid white;
+      border-radius: 50%;
+      font-size: 24px;
+      color: white;
+      text-align: center;
+      line-height: 60px;
+      user-select: none;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="gameCanvas"></canvas>
+  <div id="controls">
+    <div class="btn" id="left">◀</div>
+    <div class="btn" id="up">▲</div>
+    <div class="btn" id="down">▼</div>
+    <div class="btn" id="right">▶</div>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+
+    const shapes = ["Bola", "Quadrado", "Triângulo", "Pentágono", "Octógono"];
+    const shapeStats = [
+      { hp: 100, dmg: 5 }, { hp: 150, dmg: 10 }, { hp: 200, dmg: 15 },
+      { hp: 300, dmg: 25 }, { hp: 500, dmg: 40 }
+    ];
+
+    let player = {
+      id: null,
+      x: Math.random() * canvas.width,
+      y: Math.random() * canvas.height,
+      xp: 0,
+      shapeLevel: 0,
+      hp: 100,
+      maxHp: 100,
+      color: 'cyan'
+    };
+
+    let others = {};
+    let orbs = [];
+    const ws = new WebSocket('ws://localhost:8080'); // TROQUE para wss://seu-dominio aqui após deploy
+
+    ws.onmessage = (event) => {
+      const data = JSON.parse(event.data);
+      if (data.type === 'init') {
+        player.id = data.id;
+      } else if (data.type === 'update') {
+        others = {};
+        for (let p of data.players) {
+          if (p.id !== player.id) others[p.id] = p;
+        }
+        orbs = data.orbs || [];
+      }
+    };
+
+    const keys = { up: false, down: false, left: false, right: false };
+
+    document.getElementById('up').ontouchstart = () => keys.up = true;
+    document.getElementById('up').ontouchend = () => keys.up = false;
+    document.getElementById('down').ontouchstart = () => keys.down = true;
+    document.getElementById('down').ontouchend = () => keys.down = false;
+    document.getElementById('left').ontouchstart = () => keys.left = true;
+    document.getElementById('left').ontouchend = () => keys.left = false;
+    document.getElementById('right').ontouchstart = () => keys.right = true;
+    document.getElementById('right').ontouchend = () => keys.right = false;
+
+    document.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'w') keys.up = true;
+      if (e.key === 'ArrowDown' || e.key === 's') keys.down = true;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = true;
+      if (e.key === 'ArrowRight' || e.key === 'd') keys.right = true;
+    });
+
+    document.addEventListener('keyup', e => {
+      if (e.key === 'ArrowUp' || e.key === 'w') keys.up = false;
+      if (e.key === 'ArrowDown' || e.key === 's') keys.down = false;
+      if (e.key === 'ArrowLeft' || e.key === 'a') keys.left = false;
+      if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
+    });
+
+    function update() {
+      const speed = 3;
+      if (keys.up) player.y -= speed;
+      if (keys.down) player.y += speed;
+      if (keys.left) player.x -= speed;
+      if (keys.right) player.x += speed;
+
+      for (let id in others) {
+        const o = others[id];
+        const dx = o.x - player.x;
+        const dy = o.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 40) {
+          player.hp -= 1;
+          if (player.hp <= 0) {
+            player.hp = player.maxHp = 100;
+            player.xp = 0;
+            player.shapeLevel = 0;
+          } else {
+            player.xp += 1;
+            if (player.xp >= (player.shapeLevel + 1) * 10 && player.shapeLevel < shapes.length - 1) {
+              player.shapeLevel++;
+              player.maxHp = shapeStats[player.shapeLevel].hp;
+              player.hp = player.maxHp;
+            }
+          }
+        }
+      }
+
+      ws.send(JSON.stringify({
+        type: 'move',
+        x: player.x,
+        y: player.y,
+        hp: player.hp,
+        xp: player.xp,
+        shapeLevel: player.shapeLevel,
+        maxHp: player.maxHp
+      }));
+    }
+
+    function drawOrbs() {
+      for (let orb of orbs) {
+        ctx.fillStyle = '#f39';
+        ctx.beginPath();
+        ctx.arc(orb.x, orb.y, orb.r, 0, Math.PI * 2);
+        ctx.fill();
+
+        const dx = player.x - orb.x;
+        const dy = player.y - orb.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 20) {
+          player.xp += 1;
+          if (player.xp >= (player.shapeLevel + 1) * 10 && player.shapeLevel < shapes.length - 1) {
+            player.shapeLevel++;
+            player.maxHp = shapeStats[player.shapeLevel].hp;
+            player.hp = player.maxHp;
+          }
+          ws.send(JSON.stringify({ type: 'collect', id: orb.id }));
+        }
+      }
+    }
+
+    function drawPlayer(p, isSelf = false) {
+      ctx.fillStyle = p.color;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 20, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = 'white';
+      ctx.font = '12px sans-serif';
+      ctx.fillText(shapes[p.shapeLevel], p.x - 20, p.y - 25);
+      ctx.fillText(`❤ ${p.hp}`, p.x - 20, p.y - 10);
+
+      if (isSelf) {
+        ctx.strokeStyle = 'lime';
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, 24, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+    }
+
+    function loop() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      update();
+      drawOrbs();
+      for (let id in others) drawPlayer(others[id]);
+      drawPlayer(player, true);
+      requestAnimationFrame(loop);
+    }
+
+    loop();
+  </script>
+</body>
+</html>
