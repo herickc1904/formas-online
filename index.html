@@ -133,16 +133,15 @@
   if (keys.right) player.x += speed;
 
   if (ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({
-      type: 'move',
-      x: player.x,
-      y: player.y,
-      hp: player.hp,
-      xp: player.xp,
-      shapeLevel: player.shapeLevel,
-      maxHp: player.maxHp
-    }));
-  }
+  ws.send(JSON.stringify({
+    type: 'move',
+    x: player.x,
+    y: player.y,
+    hp: player.hp,
+    xp: player.xp,
+    shapeLevel: player.shapeLevel,
+    maxHp: player.maxHp
+  }));
 }
 
 
