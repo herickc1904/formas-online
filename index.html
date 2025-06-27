@@ -6,8 +6,8 @@
   <title>Formas Online</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #111; overflow: hidden; color: white; font-family: sans-serif; }
-    canvas { display: block; background: #111; }
+    body { background: #222; overflow: hidden; color: white; font-family: sans-serif; }
+    canvas { display: block; background: #222; }
     #controls {
       position: fixed;
       bottom: 10px;
@@ -19,7 +19,7 @@
     .btn {
       width: 60px;
       height: 60px;
-      background: #333;
+      background: #444;
       border: 2px solid white;
       border-radius: 50%;
       font-size: 24px;
@@ -28,10 +28,26 @@
       line-height: 60px;
       user-select: none;
     }
+    #hud {
+      position: fixed;
+      top: 10px;
+      left: 10px;
+      background: rgba(0, 0, 0, 0.5);
+      padding: 10px 15px;
+      border-radius: 8px;
+      font-size: 14px;
+    }
   </style>
 </head>
 <body>
   <canvas id="gameCanvas"></canvas>
+
+  <div id="hud">
+    <div>Use as <b>setas</b> ou <b>WASD</b> para se mover</div>
+    <div>Toque nas bolinhas para ganhar XP</div>
+    <div>Suba de forma: Bola → Quadrado → Triângulo → Pentágono → Octógono</div>
+  </div>
+
   <div id="controls">
     <div class="btn" id="left">◀</div>
     <div class="btn" id="up">▲</div>
@@ -42,12 +58,13 @@
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
+
     function resizeCanvas() {
-  canvas.width = window.innerWidth;
-  canvas.height = window.innerHeight;
-}
-resizeCanvas();
-window.addEventListener('resize', resizeCanvas);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
 
     const shapes = ["Bola", "Quadrado", "Triângulo", "Pentágono", "Octógono"];
     const shapeStats = [
@@ -57,8 +74,8 @@ window.addEventListener('resize', resizeCanvas);
 
     let player = {
       id: null,
-      x: Math.random() * canvas.width,
-      y: Math.random() * canvas.height,
+      x: canvas.width / 2,
+      y: canvas.height / 2,
       xp: 0,
       shapeLevel: 0,
       hp: 100,
