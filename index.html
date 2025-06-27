@@ -126,33 +126,25 @@
     });
 
     function update() {
-      const speed = 3;
-      if (keys.up) player.y -= speed;
-      if (keys.down) player.y += speed;
-      if (keys.left) player.x -= speed;
-      if (keys.right) player.x += speed;
+  const speed = 3;
+  if (keys.up) player.y -= speed;
+  if (keys.down) player.y += speed;
+  if (keys.left) player.x -= speed;
+  if (keys.right) player.x += speed;
 
-      for (let id in others) {
-        const o = others[id];
-        const dx = o.x - player.x;
-        const dy = o.y - player.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 40) {
-          player.hp -= 1;
-          if (player.hp <= 0) {
-            player.hp = player.maxHp = 100;
-            player.xp = 0;
-            player.shapeLevel = 0;
-          } else {
-            player.xp += 1;
-            if (player.xp >= (player.shapeLevel + 1) * 10 && player.shapeLevel < shapes.length - 1) {
-              player.shapeLevel++;
-              player.maxHp = shapeStats[player.shapeLevel].hp;
-              player.hp = player.maxHp;
-            }
-          }
-        }
-      }
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'move',
+      x: player.x,
+      y: player.y,
+      hp: player.hp,
+      xp: player.xp,
+      shapeLevel: player.shapeLevel,
+      maxHp: player.maxHp
+    }));
+  }
+}
+
 
       ws.send(JSON.stringify({
         type: 'move',
