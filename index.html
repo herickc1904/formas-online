@@ -64,7 +64,7 @@
 
     let others = {};
     let orbs = [];
-    const ws = new WebSocket('ws://localhost:8080'); // TROQUE para wss://seu-dominio aqui após deploy
+    const ws = new WebSocket('wss://formas-online.onrender.com');
 
     ws.onmessage = (event) => {
       const data = JSON.parse(event.data);
