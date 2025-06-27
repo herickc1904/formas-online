@@ -125,25 +125,24 @@
       if (e.key === 'ArrowRight' || e.key === 'd') keys.right = false;
     });
 
-  function update() {
-    const speed = 3;
-    if (keys.up) player.y -= speed;
-    if (keys.down) player.y += speed;
-    if (keys.left) player.x -= speed;
-    if (keys.right) player.x += speed;
+    function update() {
+      const speed = 3;
+      if (keys.up) player.y -= speed;
+      if (keys.down) player.y += speed;
+      if (keys.left) player.x -= speed;
+      if (keys.right) player.x += speed;
 
-    if (ws.readyState === WebSocket.OPEN) {
-      ws.send(JSON.stringify({
-        type: 'move',
-        x: player.x,
-        y: player.y,
-        hp: player.hp,
-        xp: player.xp,
-        shapeLevel: player.shapeLevel,
-        maxHp: player.maxHp
-      }));
-    }
-  }  
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'move',
+          x: player.x,
+          y: player.y,
+          hp: player.hp,
+          xp: player.xp,
+          shapeLevel: player.shapeLevel,
+          maxHp: player.maxHp
+        }));
+      }  
 
       ws.send(JSON.stringify({
         type: 'move',
