@@ -143,17 +143,8 @@
           maxHp: player.maxHp
         }));
       }  
-
-      ws.send(JSON.stringify({
-        type: 'move',
-        x: player.x,
-        y: player.y,
-        hp: player.hp,
-        xp: player.xp,
-        shapeLevel: player.shapeLevel,
-        maxHp: player.maxHp
-      }));
     }
+
 
     function drawOrbs() {
       for (let orb of orbs) {
